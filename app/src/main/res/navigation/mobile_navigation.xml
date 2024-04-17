@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/nav_home">
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.admin.ui.home.HomeFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_QLChuDe"
+        android:name="com.example.admin.ui.manage.QLChuDe"
+        android:label="Quản lí chủ đề"
+        tools:layout="@layout/fragment_qlchude" />
+
+
+    <fragment
+        android:id="@+id/nav_QLCauDo"
+        android:name="com.example.admin.ui.manage.QLCauDo"
+        android:label="Quản lý câu đố"
+        tools:layout="@layout/fragment_qlcaudo" />
+    <fragment
+        android:id="@+id/nav_QLKetQua"
+        android:name="com.example.admin.ui.manage.QLKetQua"
+        android:label="Quản lý kết quả"
+        tools:layout="@layout/fragment_qlketqua" />
+
+
+</navigation>

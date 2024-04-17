@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "946489469260",
+    "project_id": "appdovui",
+    "storage_bucket": "appdovui.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946489469260:android:d606f83e348003ec7147e9",
+        "android_client_info": {
+          "package_name": "com.example.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUGMbedWsyWrfDSKR0_TbZ6NnVccPoNB0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946489469260:android:85f40b739d9ae1287147e9",
+        "android_client_info": {
+          "package_name": "com.example.doan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUGMbedWsyWrfDSKR0_TbZ6NnVccPoNB0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

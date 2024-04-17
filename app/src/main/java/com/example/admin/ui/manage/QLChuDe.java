@@ -85,7 +85,7 @@ public class QLChuDe extends Fragment {
                                             "Title : " + document.getString("title")+ " | " +
                                             "Difficulty : " + document.getString("difficulty") + " | " +
                                             "Questions : " + document.getLong("questions") + "\n" +
-                                            "Image : " + document.getString("image") ;
+                                            "Image : Hình chủ đề " + document.getString("title") ;
 
                                     arrayList.add(item);
                                 }

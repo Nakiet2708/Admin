@@ -11,7 +11,7 @@
     <Spinner
         android:id="@+id/spinnerChonChuDe"
         android:layout_width="400dp"
-        android:layout_height="25dp"
+        android:layout_height="30dp"
         android:background="@drawable/side_nav_bar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,17 +22,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="20dp"
-        android:text="Answer :"
+        android:layout_marginTop="15dp"
+        android:text="Question :"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/spinnerChonChuDe" />
 
     <EditText
-        android:id="@+id/edtanswer"
+        android:id="@+id/edtquestion"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
+        android:layout_marginTop="-10dp"
         android:layout_marginEnd="16dp"
         android:ems="10"
         android:inputType="text"
@@ -46,16 +46,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:text="Option_a :"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edtanswer" />
+        app:layout_constraintTop_toBottomOf="@id/edtquestion" />
 
     <EditText
         android:id="@+id/edtoption_a"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="-10dp"
         android:layout_marginEnd="16dp"
         android:ems="10"
         android:inputType="text"
@@ -68,7 +70,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:text="Option_b :"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -78,6 +80,7 @@
         android:id="@+id/edtoption_b"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="-10dp"
         android:layout_marginEnd="16dp"
         android:ems="10"
         android:inputType="text"
@@ -90,7 +93,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:text="Option_c :"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -100,6 +103,8 @@
         android:id="@+id/edtoption_c"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="-10dp"
         android:layout_marginEnd="16dp"
         android:ems="10"
         android:inputType="text"
@@ -112,16 +117,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
-        android:text="Question :"
+        android:layout_marginTop="20dp"
+        android:text="Answer :"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/edtoption_c" />
 
     <EditText
-        android:id="@+id/edtquestion"
+        android:id="@+id/edtanswer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="-10dp"
         android:layout_marginEnd="16dp"
         android:ems="10"
         android:inputType="text"
@@ -130,25 +137,64 @@
         app:layout_constraintTop_toTopOf="@id/textView5" />
 
     <TextView
+        android:id="@+id/textView7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="20dp"
+        android:text="Image :"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/edtanswer" />
+
+    <EditText
+        android:id="@+id/edtimage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="-10dp"
+        android:layout_marginEnd="105dp"
+        android:ems="10"
+        android:inputType="text"
+        app:layout_constraintEnd_toEndOf="@id/btnthemAnh"
+        app:layout_constraintStart_toEndOf="@id/textView7"
+        app:layout_constraintTop_toTopOf="@id/textView7" />
+
+    <Button
+        android:id="@+id/btnthemAnh"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/green"
+        android:text="Thêm"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/edtanswer" />
+
+    <TextView
         android:id="@+id/textView6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="75dp"
         android:text="Timer :"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edtquestion" />
+        app:layout_constraintTop_toBottomOf="@id/edtanswer" />
 
     <EditText
         android:id="@+id/edttimer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="28dp"
+        android:layout_marginTop="-10dp"
         android:layout_marginEnd="16dp"
         android:ems="10"
         android:inputType="text"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@id/textView6"
         app:layout_constraintTop_toTopOf="@id/textView6" />
 

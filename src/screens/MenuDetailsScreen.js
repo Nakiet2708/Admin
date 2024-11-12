@@ -250,18 +250,6 @@ const MenuDetailsScreen = ({ route, navigation }) => {
     }));
   }, [selectedProduct?.discountPrice]);
 
-  const resetForm = () => {
-    setSelectedProduct({
-      name: '',
-      describe: '',
-      price: '',
-      discountPrice: '',
-      status: '',
-      image: ''
-    });
-    setSelectedImage(null);
-  };
-
 
   const showDialog = () => {
     setSelectedProduct({

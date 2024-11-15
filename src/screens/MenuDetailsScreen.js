@@ -65,8 +65,14 @@ const MenuDetailsScreen = ({ route, navigation }) => {
 
   const handleImagePicker = () => {
     launchImageLibrary({ mediaType: 'photo' }, (response) => {
-      if (!response.didCancel && !response.error) {
-        setSelectedImage(response.assets[0].uri);
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      } else {
+        const uri = response.assets[0].uri;
+        console.log('Selected Image URI:', uri);
+        setImageUri(uri);
       }
     });
   };
@@ -137,8 +143,8 @@ const MenuDetailsScreen = ({ route, navigation }) => {
         window.alert('Vui lòng nhập mô tả');
         return;
       }
-      if (!selectedProduct?.price) {
-        window.alert('Vui lòng nhập giá');
+      if (!selectedProduct?.price || isNaN(Number(selectedProduct.price))) {
+        window.alert('Vui lòng nhập giá hợp lệ (phải là số)');
         return;
       }
       if (!selectedImage && !selectedProduct.id) {
@@ -165,8 +171,8 @@ const MenuDetailsScreen = ({ route, navigation }) => {
       const productData = {
         name: selectedProduct.name.trim(),
         describe: selectedProduct.describe.trim(),
-        price: selectedProduct.price,
-        discountPrice: selectedProduct.discountPrice || '',
+        price: Number(selectedProduct.price),
+        discountPrice: selectedProduct.discountPrice ? Number(selectedProduct.discountPrice) : '',
         status: selectedProduct.status || '',
         image: imageUrl
       };
@@ -452,7 +458,11 @@ const MenuDetailsScreen = ({ route, navigation }) => {
                   <TextInput
                     style={styles.input}
                     value={selectedProduct?.price?.toString() || ''}
-                    onChangeText={(text) => setSelectedProduct(prev => ({...prev, price: text}))}
+                    onChangeText={(text) => {
+                      if (text === '' || /^\d+$/.test(text)) {
+                        setSelectedProduct(prev => ({...prev, price: text}))
+                      }
+                    }}
                     placeholder="Giá sản phẩm"
                     keyboardType="numeric"
                   />

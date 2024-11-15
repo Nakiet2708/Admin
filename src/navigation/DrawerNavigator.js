@@ -14,6 +14,7 @@ import ProductDetailsScreen from '../screens/ProductDetailsScreen';
 import AppointmentsScreen from '../screens/AppointmentsScreen';
 import AppointmentDetails from '../screens/AppointmentDetails';
 import UserManager from '../screens/UserManager';
+import AdvertisementManager from '../screens/AdvertisementManager';
 
 import { getAuth } from "firebase/auth";
 
@@ -51,7 +52,7 @@ const CustomDrawerContent = (props) => {
       <DrawerContentScrollView {...props}>
         <View style={styles.drawerItemsContainer}>
           <DrawerItem
-            label={() => <Text style={styles.drawerLabel}>Trang chủ</Text>}
+            label={() => <Text style={styles.drawerLabel}>Quản lý nhà hàng</Text>}
             onPress={() => props.navigation.navigate('Trang chủ')}
             style={[styles.drawerItem, props.state.index === 0 && styles.activeItem]}
           />
@@ -74,6 +75,11 @@ const CustomDrawerContent = (props) => {
             label={() => <Text style={styles.drawerLabel}>Quản lý người dùng</Text>}
             onPress={() => props.navigation.navigate('Quản lý người dùng')}
             style={[styles.drawerItem, props.state.index === 4 && styles.activeItem]}
+          />
+          <DrawerItem
+            label={() => <Text style={styles.drawerLabel}>Quản lý quảng cáo</Text>}
+            onPress={() => props.navigation.navigate('Quản lý quảng cáo')}
+            style={[styles.drawerItem, props.state.index === 5 && styles.activeItem]}
           />  
         </View>
       </DrawerContentScrollView>
@@ -176,6 +182,11 @@ const DrawerNavigator = () => {
         name="Quản lý người dùng" 
         component={UserManager}
         options={{ title: 'Quản lý người dùng' }}
+      />
+      <Drawer.Screen 
+        name="Quản lý quảng cáo" 
+        component={AdvertisementManager}
+        options={{ title: 'Quản lý quảng cáo' }}
       />
     </Drawer.Navigator>
   );

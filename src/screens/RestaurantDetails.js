@@ -173,7 +173,7 @@ const RestaurantDetails = ({ route, navigation }) => {
       // Thêm phòng mới vào Firestore
       const tableData = {
         name: selectedTable.name.trim(),
-        price: selectedTable.price,
+        price: Number(selectedTable.price),
         image: imageUrl
       };
 
@@ -472,10 +472,12 @@ const RestaurantDetails = ({ route, navigation }) => {
                   <TextInput
                     style={styles.input}
                     placeholder="Nhập giá"
-                    value={selectedTable?.price || ''}
+                    value={selectedTable?.price?.toString() || ''}
                     onChangeText={(text) => {
-                      const numericValue = text.replace(/[^0-9]/g, '');
-                      setSelectedTable({ ...selectedTable, price: numericValue });
+                      // Chỉ cho phép nhập số
+                      if (text === '' || /^\d+$/.test(text)) {
+                        setSelectedTable(prev => ({...prev, price: text}))
+                      }
                     }}
                     keyboardType="numeric"
                   />

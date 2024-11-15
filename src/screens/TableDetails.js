@@ -87,7 +87,7 @@ const TableDetails = ({ route, navigation }) => {
       await updateDoc(tableRef, { 
         name: tableName, 
         image: newImageUrl,
-        price: parseFloat(tablePrice)
+        price: Number(tablePrice)
       });
 
       setTableImage(newImageUrl);

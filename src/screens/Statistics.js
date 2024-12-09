@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Dimensions, StyleSheet, Picker } from 'react-native';
+import { View, Text, ScrollView, Dimensions, StyleSheet, Picker, TouchableOpacity, TextInput, Modal, Platform } from 'react-native';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { getFirestore, collection, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
 import moment from 'moment';
+import { app } from '../../config';
 
 const screenWidth = Dimensions.get('window').width;
 const db = getFirestore();
@@ -23,6 +24,19 @@ export default function Statistics() {
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [restaurants, setRestaurants] = useState(['Tất cả']);
   const [selectedRestaurant, setSelectedRestaurant] = useState('Tất cả');
+  const [dateRange, setDateRange] = useState({
+    startDate: moment().subtract(6, 'days').toDate(),
+    endDate: new Date()
+  });
+  const [isDatePickerVisible, setDatePickerVisible] = useState({
+    start: false,
+    end: false
+  });
+
+
+  const hideDatePicker = (type) => {
+    setDatePickerVisible(prev => ({...prev, [type]: false}));
+  };
 
   // Fetch dữ liệu từ Firestore
   useEffect(() => {
@@ -133,14 +147,17 @@ export default function Statistics() {
       }
     });
 
-    // Lấy ngày hiện tại và 6 ngày trước đó
+    // Cập nhật cách tính doanh thu theo ngày
+    const startDate = moment(dateRange.startDate);
+    const endDate = moment(dateRange.endDate);
     const dates = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = moment().subtract(i, 'days').format('DD/MM/YYYY');
-      dates.push(date);
+    let currentDate = startDate.clone();
+
+    while (currentDate.isSameOrBefore(endDate)) {
+      dates.push(currentDate.format('DD/MM/YYYY'));
+      currentDate.add(1, 'days');
     }
 
-    // Tạo dữ liệu cho biểu đồ
     const revenueData = {
       labels: dates.map(date => moment(date, 'DD/MM/YYYY').format('DD/MM')),
       datasets: [{
@@ -175,7 +192,7 @@ export default function Statistics() {
     const dishesData = {
       labels: topDishes.length > 0 
         ? topDishes.map(([name]) => name.length > 10 ? name.substring(0, 10) + '...' : name)
-        : ['Chưa có dữ liệu'],
+        : ['Chưa có dữ liu'],
       datasets: [{
         data: topDishes.length > 0 
           ? topDishes.map(([,count]) => count)
@@ -279,6 +296,155 @@ export default function Statistics() {
     }
   }, [selectedRestaurant, Appointments]);
 
+
+  const DateInput = ({ value, onChange, label }) => {
+    if (Platform.OS === 'web') {
+      return (
+        <View style={styles.dateInputContainer}>
+          <Text style={styles.dateLabel}>{label}</Text>
+          <input
+            type="date"
+            value={moment(value).format('YYYY-MM-DD')}
+            onChange={(e) => {
+              const date = new Date(e.target.value);
+              onChange(date);
+              if (Appointments.length > 0) {
+                calculateStats(Appointments);
+              }
+            }}
+            style={{
+              padding: 8,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: '#ddd',
+              backgroundColor: '#f5f5f5',
+              width: 130,
+              fontSize: 14,
+            }}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.dateInputContainer}>
+        <Text style={styles.dateLabel}>{label}</Text>
+        <TouchableOpacity
+          style={styles.dateInput}
+          onPress={() => {/* mobile date picker logic */}}
+        >
+          <Text>{moment(value).format('DD/MM/YYYY')}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  // Thêm state tạm thời cho việc chọn ngày
+  const [tempDateRange, setTempDateRange] = useState({
+    startDate: moment().subtract(6, 'days').toDate(),
+    endDate: new Date()
+  });
+
+  // Hàm xử lý khi bấm nút xem thống kê
+  const handleViewStats = () => {
+    setDateRange(tempDateRange);
+    if (Appointments.length > 0) {
+      calculateStats(Appointments);
+    }
+  };
+
+  // Thêm state để lưu thống kê tổng quan
+  const [summaryStats, setSummaryStats] = useState({
+    totalUsers: 0,
+    todayOrders: 0,
+    totalProducts: 0,
+    monthlyRevenue: 0
+  });
+  // Thêm state loading
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      setIsLoading(true); // Bắt đầu loading
+      try {
+        const db = getFirestore(app);
+        
+        // Đếm tổng người dùng từ collection "users"
+        const usersRef = collection(db, "USERS");
+        const usersSnapshot = await getDocs(usersRef);
+        const totalUsers = usersSnapshot.size;
+
+        // Lấy tổng sản phẩm từ các menu
+        const productsRef = collection(db, "menu");
+        let totalProducts = 0;
+        const menuSnapshot = await getDocs(productsRef);
+        for (const menuDoc of menuSnapshot.docs) {
+          const productsInMenuRef = collection(db, "menu", menuDoc.id, "product");
+          const productsSnapshot = await getDocs(productsInMenuRef);
+          totalProducts += productsSnapshot.size;
+        }
+
+        // Lấy đơn hàng và tính doanh thu từ collection "Appointments"
+        const appointmentsRef = collection(db, "Appointments");
+        const appointmentsSnapshot = await getDocs(appointmentsRef);
+        const appointments = appointmentsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+            createdAt: data.dateTime
+          };
+        });
+
+        // Tính đơn hàng hôm nay
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayOrders = appointments.filter(app => {
+          if (!app?.dateTime) return false;
+          const appDate = app.dateTime.toDate();
+          appDate.setHours(0, 0, 0, 0);
+          return appDate.getTime() === today.getTime();
+        }).length;
+
+        // Tính doanh thu tháng này
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const monthlyRevenue = appointments.reduce((total, app) => {
+          if (!app?.dateTime) return total;
+          const appDate = app.dateTime.toDate();
+          if (appDate.getMonth() === currentMonth && 
+              appDate.getFullYear() === currentYear) {
+            const price = parseInt(app.totalPrice) || 0;
+            return total + price;
+          }
+          return total;
+        }, 0);
+
+        setSummaryStats(prev => ({
+          ...prev,
+          totalUsers,
+          todayOrders,
+          totalProducts,
+          monthlyRevenue
+        }));
+
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+        setSummaryStats(prev => ({
+          ...prev,
+          totalUsers: 0,
+          todayOrders: 0,
+          totalProducts: 0,
+          monthlyRevenue: 0
+        }));
+      } finally {
+        setIsLoading(false); // Kết thúc loading
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
   if (loading || !stats) {
     return (
       <View style={styles.container}>
@@ -289,11 +455,78 @@ export default function Statistics() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.summaryContainer}>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Tổng người dùng</Text>
+          <Text style={styles.summaryValue}>
+            {isLoading ? "Đang tải..." : summaryStats.totalUsers}
+          </Text>
+        </View>
+        
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Đơn hàng hôm nay</Text>
+          <Text style={styles.summaryValue}>
+            {isLoading ? "Đang tải..." : summaryStats.todayOrders}
+          </Text>
+        </View>
+        
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Tổng sản phẩm</Text>
+          <Text style={styles.summaryValue}>
+            {isLoading ? "Đang tải..." : summaryStats.totalProducts}
+          </Text>
+        </View>
+        
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Doanh thu tháng này</Text>
+          <Text style={styles.summaryValue}>
+            {isLoading ? "Đang tải..." : new Intl.NumberFormat('vi-VN', {
+              style: 'currency',
+              currency: 'VND',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(summaryStats.monthlyRevenue)}
+          </Text>
+        </View>
+      </View>
+
       <ScrollView style={styles.scrollView}>
         <View style={styles.gridContainer}>
           {/* Biểu đồ 1 - Doanh thu */}
           <View style={styles.chartBox}>
-            <Text style={styles.chartTitle}>Doanh thu 7 ngày gần nhất (nghìn đồng)</Text>
+            <Text style={styles.chartTitle}>Doanh thu theo ngày (nghìn đồng)</Text>
+            
+            <View style={styles.datePickerContainer}>
+              <DateInput
+                label="Từ:"
+                value={tempDateRange.startDate}
+                onChange={(date) => {
+                  setTempDateRange(prev => ({
+                    ...prev,
+                    startDate: date
+                  }));
+                }}
+              />
+
+              <DateInput
+                label="Đến:"
+                value={tempDateRange.endDate}
+                onChange={(date) => {
+                  setTempDateRange(prev => ({
+                    ...prev,
+                    endDate: date
+                  }));
+                }}
+              />
+
+              <TouchableOpacity 
+                style={styles.viewStatsButton}
+                onPress={handleViewStats}
+              >
+                <Text style={styles.viewStatsButtonText}>Xem thống kê</Text>
+              </TouchableOpacity>
+            </View>
+
             <LineChart
               data={stats.revenueData}
               width={screenWidth * 0.45}  // Giảm kích thước xuống
@@ -619,5 +852,150 @@ const styles = StyleSheet.create({
   pickerStyle: {
     height: 35,
     backgroundColor: 'transparent',
+  },
+  datePickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingHorizontal: 8,
+    gap: 10, // Tạo khoảng cách đều giữa các phần tử
+  },
+  dateInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateLabel: {
+    marginRight: 8,
+    fontSize: 14,
+    color: '#333',
+  },
+  dateInput: {
+    backgroundColor: '#f5f5f5',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    width: 100,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '80%',
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    height: 200,
+  },
+  pickerColumn: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  pickerLabel: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  pickerScroll: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+  },
+  pickerItem: {
+    padding: 10,
+    alignItems: 'center',
+  },
+  pickerItemSelected: {
+    backgroundColor: '#007AFF',
+  },
+  pickerText: {
+    fontSize: 16,
+  },
+  pickerTextSelected: {
+    fontSize: 16,
+    color: 'white',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 8,
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#FF3B30',
+  },
+  confirmButton: {
+    backgroundColor: '#34C759',
+  },
+  buttonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  viewStatsButton: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 8,
+    minWidth: 100,
+  },
+  viewStatsButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  summaryContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    padding: 10,
+    marginBottom: 20,
+  },
+  summaryCard: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 15,
+    width: '23%', // Để tạo 4 cột
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  summaryTitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  summaryValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
   },
 });

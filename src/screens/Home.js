@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Modal } from 'react-native';
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { Provider, Portal, Dialog, Button, Paragraph } from 'react-native-paper';
 import { app } from '../../config';
@@ -31,6 +31,7 @@ const HomeScreen = ({ navigation }) => {
   });
   const [selectedImage, setSelectedImage] = useState(null);
   const [mapPosition, setMapPosition] = useState([10.8231, 106.6297]); // Default: TP.HCM
+  const [searchQuery, setSearchQuery] = useState('');
   const db = getFirestore(app);
   const storage = getStorage(app);
 
@@ -228,9 +229,23 @@ const HomeScreen = ({ navigation }) => {
     return null;
   };
 
+  // Hàm lọc nhà hàng
+  const getFilteredRestaurants = () => {
+    if (!searchQuery.trim()) {
+      return restaurants;
+    }
+    
+    const searchLower = searchQuery.toLowerCase().trim();
+    return restaurants.filter(item =>
+      item.restaurantName?.toLowerCase().includes(searchLower) ||
+      item.businessAddress?.toLowerCase().includes(searchLower)
+    );
+  };
+
   return (
     <Provider>
       <View style={styles.container}>
+
         <View style={styles.addButtonContainer}>
           <TouchableOpacity 
             style={styles.addButton}
@@ -239,17 +254,40 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.addButtonText}>Thêm Nhà Hàng Mới</Text>
           </TouchableOpacity>
         </View>
-        
-        {restaurants.length === 0 ? (
-          <Text style={styles.emptyText}>Không có nhà hàng nào</Text>
+        <View style={styles.header}>
+          
+          <View style={styles.headerRight}>
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Tìm kiếm theo tên hoặc địa chỉ..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery ? (
+                <TouchableOpacity 
+                  style={styles.clearButton}
+                  onPress={() => setSearchQuery('')}
+                >
+                  <Text style={styles.clearButtonText}>×</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+        </View>
+        {getFilteredRestaurants().length === 0 ? (
+          <Text style={styles.emptyText}>
+            {searchQuery ? 'Không tìm thấy nhà hàng phù hợp' : 'Không có nhà hàng nào'}
+          </Text>
         ) : (
           <FlatList
-            data={restaurants}
+            data={getFilteredRestaurants()}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             style={styles.list}
           />
         )}
+
         <Portal>
           <Dialog visible={visible} onDismiss={hideDialog} style={styles.deleteDialog}>
             <Dialog.Title style={styles.deleteDialogTitle}>Xác nhận xóa</Dialog.Title>
@@ -572,6 +610,43 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#ccc',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  headerRight: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 16,
+  },
+  searchContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  searchInput: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    fontSize: 14,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 8,
+    top: '50%',
+    transform: [{ translateY: -12 }],
+    padding: 4,
+  },
+  clearButtonText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: 'bold',
   },
 });
 

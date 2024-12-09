@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput } from 'react-native';
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { useFocusEffect } from '@react-navigation/native';
-import { Provider, Portal, Dialog, Button } from 'react-native-paper';
+import { Provider, Portal, Dialog, Button, Paragraph } from 'react-native-paper';
 import { app } from '../../config';
 import { getStorage } from 'firebase/storage';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -17,6 +17,7 @@ const MenuManager = ({ navigation }) => {
     name: '',
   });
   const [selectedImage, setSelectedImage] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const db = getFirestore(app);
   const storage = getStorage(app);
 
@@ -87,7 +88,6 @@ const MenuManager = ({ navigation }) => {
 
       // 3. Xóa menu
       await deleteDoc(doc(db, "menu", selectedId));
-      fetchMenus();
       setVisible(false);
       window.alert("Xóa menu thành công!");
     } catch (error) {
@@ -133,7 +133,6 @@ const MenuManager = ({ navigation }) => {
       setAddDialogVisible(false);
       setNewMenu({ name: '' });
       setSelectedImage(null);
-      fetchMenus();
       window.alert('Thêm menu thành công!');
     } catch (error) {
       console.error("Error adding menu:", error);
@@ -175,24 +174,59 @@ const MenuManager = ({ navigation }) => {
     </View>
   );
 
+  // Hàm lọc danh sách menu
+  const getFilteredMenus = () => {
+    if (!searchQuery.trim()) {
+      return menus;
+    }
+    
+    const searchLower = searchQuery.toLowerCase().trim();
+    return menus.filter(menu =>
+      menu.name?.toLowerCase().includes(searchLower)
+    );
+  };
+
   return (
     <Provider>
       <View style={styles.container}>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => setAddDialogVisible(true)}
-        >
-          <Text style={styles.addButtonText}>+ Thêm Menu Mới</Text>
-        </TouchableOpacity>
+        <View style={styles.header}>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Tìm kiếm theo tên menu..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery ? (
+              <TouchableOpacity 
+                style={styles.clearButton}
+                onPress={() => setSearchQuery('')}
+              >
+                <Text style={styles.clearButtonText}>×</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          <TouchableOpacity 
+            style={styles.addButton}
+            onPress={() => setAddDialogVisible(true)}
+          >
+            <Text style={styles.addButtonText}>+ Thêm Menu Mới</Text>
+          </TouchableOpacity>
+        </View>
 
         <FlatList
-          data={menus}
+          data={getFilteredMenus()}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Chưa có menu nào</Text>
-              <Text style={styles.emptySubText}>Hãy thêm menu mới để bắt đầu</Text>
+              <Text style={styles.emptyText}>
+                {searchQuery ? 'Không tìm thấy menu phù hợp' : 'Chưa có menu nào'}
+              </Text>
+              <Text style={styles.emptySubText}>
+                {searchQuery ? '' : 'Hãy thêm menu mới để bắt đầu'}
+              </Text>
             </View>
           }
           contentContainerStyle={styles.listContainer}
@@ -200,42 +234,50 @@ const MenuManager = ({ navigation }) => {
 
         {/* Dialog xác nhận xóa */}
         <Portal>
-          <Dialog visible={visible} onDismiss={() => setVisible(false)}>
-            <Dialog.Title>Xác nhận xóa</Dialog.Title>
+          <Dialog visible={visible} onDismiss={() => setVisible(false)} style={styles.deleteDialog}>
+            <Dialog.Title style={styles.deleteDialogTitle}>Xác nhận xóa</Dialog.Title>
             <Dialog.Content>
-              <Text>Bạn có chắc muốn xóa menu này?</Text>
+              <Paragraph style={styles.deleteDialogContent}>Bạn có chắc muốn xóa menu này?</Paragraph>
             </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => setVisible(false)}>Hủy</Button>
-              <Button onPress={handleDelete}>Xóa</Button>
+            <Dialog.Actions style={styles.deleteDialogActions}>
+              <Button onPress={() => setVisible(false)} textColor="#007BFF">Hủy</Button>
+              <Button onPress={handleDelete} textColor="#007BFF">Xóa</Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>
 
         {/* Dialog thêm menu mới */}
         <Portal>
-          <Dialog visible={addDialogVisible} onDismiss={() => setAddDialogVisible(false)}>
-            <Dialog.Title>Thêm Menu Mới</Dialog.Title>
+          <Dialog visible={addDialogVisible} onDismiss={() => setAddDialogVisible(false)} style={styles.dialog}>
+            <Dialog.Title style={styles.dialogTitle}>Thêm Menu Mới</Dialog.Title>
             <Dialog.Content>
-              <Text style={styles.label}>Tên menu <Text style={styles.required}>*</Text></Text>
-              <TextInput
-                style={styles.input}
-                value={newMenu.name}
-                onChangeText={(text) => setNewMenu({ ...newMenu, name: text })}
-                placeholder="Nhập tên menu"
-              />
-              
-              <Text style={styles.label}>Hình ảnh <Text style={styles.required}>*</Text></Text>
-              {selectedImage && (
-                <Image source={{ uri: selectedImage }} style={styles.previewImage} />
-              )}
-              <TouchableOpacity onPress={handleImagePicker} style={styles.imagePickerButton}>
-                <Text style={styles.imagePickerButtonText}>Chọn Hình Ảnh</Text>
-              </TouchableOpacity>
+              <View style={styles.dialogContainer}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Tên menu <Text style={styles.required}>*</Text></Text>
+                  <TextInput
+                    style={styles.dialogInput}
+                    value={newMenu.name}
+                    onChangeText={(text) => setNewMenu({ ...newMenu, name: text })}
+                    placeholder="Nhập tên menu"
+                  />
+                </View>
+                
+                <View style={styles.imageContainer}>
+                  <Text style={styles.label}>Hình ảnh <Text style={styles.required}>*</Text></Text>
+                  {selectedImage ? (
+                    <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+                  ) : (
+                    <View style={styles.imagePlaceholder} />
+                  )}
+                  <TouchableOpacity onPress={handleImagePicker} style={styles.imagePickerButton}>
+                    <Text style={styles.imagePickerButtonText}>Chọn Hình Ảnh</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => setAddDialogVisible(false)}>Hủy</Button>
-              <Button onPress={handleAddMenu}>Thêm</Button>
+            <Dialog.Actions style={styles.dialogActions}>
+              <Button onPress={() => setAddDialogVisible(false)} textColor="#007BFF">Hủy</Button>
+              <Button onPress={handleAddMenu} textColor="#007BFF">Thêm</Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>
@@ -251,11 +293,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F9FC',
   },
   header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1A237E',
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
-    textAlign: 'center',
+    gap: 12,
   },
   listContainer: {
     paddingBottom: 20,
@@ -316,7 +357,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1976D2',
     padding: 15,
     borderRadius: 12,
-    marginBottom: 20,
     alignItems: 'center',
     elevation: 3,
     shadowColor: '#000',
@@ -380,6 +420,115 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '500',
+  },
+  deleteDialog: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    maxWidth: 300,
+    alignSelf: 'center',
+  },
+  deleteDialogTitle: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#000',
+  },
+  deleteDialogContent: {
+    textAlign: 'center',
+    color: '#000',
+  },
+  deleteDialogActions: {
+    justifyContent: 'flex-end',
+    paddingHorizontal: 15,
+    paddingBottom: 8,
+  },
+  dialog: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+  },
+  dialogTitle: {
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  dialogContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    backgroundColor: 'white',
+  },
+  inputContainer: {
+    flex: 1,
+    marginRight: 16,
+  },
+  imageContainer: {
+    width: 150,
+    alignItems: 'center',
+  },
+  dialogInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 3,
+    backgroundColor: 'white',
+    color: '#000',
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 1,
+    color: '#333',
+  },
+  required: {
+    color: 'red',
+    fontSize: 14,
+  },
+  previewImage: {
+    width: 150,
+    height: 100,
+    resizeMode: 'contain',
+    marginBottom: 10,
+    borderRadius: 5,
+  },
+  imagePickerButton: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    width: '100%',
+  },
+  imagePickerButtonText: {
+    color: 'white',
+    fontSize: 14,
+  },
+  dialogActions: {
+    padding: 15,
+    justifyContent: 'flex-end',
+  },
+  searchContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  searchInput: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    fontSize: 14,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 8,
+    top: '50%',
+    transform: [{ translateY: -12 }],
+    padding: 4,
+  },
+  clearButtonText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: 'bold',
   },
 });
 

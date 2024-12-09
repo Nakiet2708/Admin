@@ -70,10 +70,22 @@ const AppointmentDetails = ({ route, navigation }) => {
               <Text style={styles.label}>Tên khách hàng:</Text>
               <Text style={styles.value}>{appointment.username}</Text>
             </View>
+            {appointment.recipientName && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Người nhận:</Text>
+                <Text style={styles.value}>{appointment.recipientName}</Text>
+              </View>
+            )}
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Số điện thoại:</Text>
+              <Text style={styles.label}>Số điện thoại khách hàng:</Text>
               <Text style={styles.value}>{appointment.phone}</Text>
             </View>
+            {appointment.recipientPhone && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Số điện thoại người nhận:</Text>
+                <Text style={styles.value}>{appointment.recipientPhone}</Text>
+              </View>
+            )}
             <View style={styles.infoRow}>
               <Text style={styles.label}>Email:</Text>
               <Text style={styles.value}>{appointment.email}</Text>
@@ -120,7 +132,9 @@ const AppointmentDetails = ({ route, navigation }) => {
               <View style={styles.itemDetails}>
                 <Text style={styles.itemName} >{item.name}</Text>
                 <Text style={styles.itemInfo}>Số lượng: {item.quantity}</Text>
-                <Text style={styles.itemInfo}>Giá: {formatPrice(item.ProductTotalPrice)}  Đã giảm {formatPrice(item.discountAmount)}</Text>
+                <Text style={styles.itemInfo}>
+                  Giá: {formatPrice(item.ProductTotalPrice)}  Đã giảm {formatPrice(item.discountAmount * item.quantity)}
+                </Text>
                 {item.options && item.options.map((option, optIndex) => (
                   <Text key={optIndex} style={styles.itemOption}>
                     - {option}

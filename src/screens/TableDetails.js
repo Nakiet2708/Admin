@@ -91,10 +91,10 @@ const TableDetails = ({ route, navigation }) => {
       });
 
       setTableImage(newImageUrl);
-      window.alert('Thành công: Đã cập nhật thông tin bảng');
+      window.alert('Thành công: Đã cập nhật thông tin phòng');
     } catch (error) {
       console.error("Error updating table:", error);
-      window.alert('Lỗi: Không thể cập nhật thông tin bảng');
+      window.alert('Lỗi: Không thể cập nhật thông tin phòng');
     }
   };
 
@@ -187,7 +187,7 @@ const TableDetails = ({ route, navigation }) => {
             <Text style={styles.backButtonText}>← Quay lại</Text>
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.header}>Chi tiết bảng: {tableName}</Text>
+            <Text style={styles.header}>Chi tiết phòng: {tableName}</Text>
           </View>
         </View>
 
@@ -225,7 +225,7 @@ const TableDetails = ({ route, navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.submitButton} onPress={handleUpdateTable}>
-          <Text style={styles.submitButtonText}>Cập Nhật Bảng</Text>
+          <Text style={styles.submitButtonText}>Cập Nhật phòng</Text>
         </TouchableOpacity>
 
         <Text style={styles.header}>Danh sách option</Text>

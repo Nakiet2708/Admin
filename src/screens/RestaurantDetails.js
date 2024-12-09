@@ -28,6 +28,7 @@ const RestaurantDetails = ({ route, navigation }) => {
   const storage = getStorage(app);
   const [selectedImage, setSelectedImage] = useState(null);
   const [mapPosition, setMapPosition] = useState([10.8231, 106.6297]); // Default: TP.HCM
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     // Realtime listener cho restaurant data
@@ -329,6 +330,26 @@ const RestaurantDetails = ({ route, navigation }) => {
     return null;
   };
 
+  // Hàm lọc danh sách phòng
+  const getFilteredTables = () => {
+    if (!searchQuery.trim()) {
+      return tables;
+    }
+    
+    const searchLower = searchQuery.toLowerCase().trim();
+    return tables.filter(table =>
+      table.name?.toLowerCase().includes(searchLower)
+    );
+  };
+
+  // Cập nhật getCurrentPageData để sử dụng danh sách đã lọc
+  const getCurrentPageData = () => {
+    const filteredData = getFilteredTables();
+    const startIndex = (trangHienTai - 1) * soHangMoiTrang;
+    const endIndex = startIndex + soHangMoiTrang;
+    return filteredData.slice(startIndex, endIndex);
+  };
+
   return (
     <Provider>
       <ScrollView style={styles.container}>
@@ -420,20 +441,52 @@ const RestaurantDetails = ({ route, navigation }) => {
         </TouchableOpacity>
 
         <Text style={styles.header}>Danh sách các phòng</Text>
-        <TouchableOpacity onPress={() => showDialog({ name: '', image: '', price: '' })} style={styles.addButton}>
-          <Text style={styles.addButtonText}>Thêm</Text>
-        </TouchableOpacity>
+        
+        <View style={styles.tableHeader}>
+          {/* Thêm thanh tìm kiếm */}
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Tìm kiếm theo tên phòng..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery ? (
+              <TouchableOpacity 
+                style={styles.clearButton}
+                onPress={() => setSearchQuery('')}
+              >
+                <Text style={styles.clearButtonText}>×</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          <TouchableOpacity 
+            onPress={() => showDialog({ name: '', image: '', price: '' })} 
+            style={styles.addButton}
+          >
+            <Text style={styles.addButtonText}>Thêm</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.tableHeader}>
           <Text style={styles.headerCell}>Name</Text>
           <Text style={styles.headerCell}>Image</Text>
           <Text style={styles.headerCell}>price</Text>
           <Text style={styles.headerCell}>Chức năng</Text>
         </View>
-        <FlatList
-          data={danhSachHienThi}
-          renderItem={renderTableItem}
-          keyExtractor={(item) => item.id}
-        />
+
+        {getCurrentPageData().length === 0 ? (
+          <Text style={styles.emptyText}>
+            {searchQuery ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
+          </Text>
+        ) : (
+          <FlatList
+            data={getCurrentPageData()}
+            renderItem={renderTableItem}
+            keyExtractor={(item) => item.id}
+          />
+        )}
 
         <View style={styles.phanTrangContainer}>
           {Array.from({ length: Math.ceil(tables.length / soHangMoiTrang) }).map((_, index) => (
@@ -857,6 +910,43 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#ccc',
+  },
+  searchContainer: {
+    flex: 1,
+    position: 'relative',
+    marginRight: 10,
+  },
+  searchInput: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    fontSize: 14,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 8,
+    top: '50%',
+    transform: [{ translateY: -12 }],
+    padding: 4,
+  },
+  clearButtonText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: 'bold',
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#666',
   },
 });
 

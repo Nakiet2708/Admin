@@ -24,6 +24,7 @@ const MenuDetailsScreen = ({ route, navigation }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [trangHienTai, setTrangHienTai] = useState(1);
   const [soHangMoiTrang] = useState(4);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const db = getFirestore(app);
   const storage = getStorage(app);
@@ -109,7 +110,7 @@ const MenuDetailsScreen = ({ route, navigation }) => {
         await uploadBytes(imageRef, blob);
         const newImageUrl = await getDownloadURL(imageRef);
         
-        // Thêm URL ảnh mới vào dữ liệu cập nhật
+        // Thêm URL ảnh mới vào dữ liệu cập nh���t
         updateData.image = newImageUrl;
         setMenuImage(newImageUrl);
       }
@@ -238,9 +239,20 @@ const MenuDetailsScreen = ({ route, navigation }) => {
     </View>
   );
 
+  const getFilteredProducts = () => {
+    if (!searchQuery.trim()) {
+      return products;
+    }
+    
+    const searchLower = searchQuery.toLowerCase().trim();
+    return products.filter(product =>
+      product.name?.toLowerCase().includes(searchLower)
+    );
+  };
+
   const viTriCuoiCung = trangHienTai * soHangMoiTrang;
   const viTriDauTien = viTriCuoiCung - soHangMoiTrang;
-  const danhSachHienThi = products.slice(viTriDauTien, viTriCuoiCung);
+  const danhSachHienThi = getFilteredProducts().slice(viTriDauTien, viTriCuoiCung);
 
   useEffect(() => {
     if (!selectedProduct) return;
@@ -391,12 +403,32 @@ const MenuDetailsScreen = ({ route, navigation }) => {
         </TouchableOpacity>
 
         <Text style={styles.header}>Danh sách sản phẩm</Text>
-        <TouchableOpacity 
-          onPress={showDialog} 
-          style={styles.addButton}
-        >
-          <Text style={styles.addButtonText}>Thêm</Text>
-        </TouchableOpacity>
+        
+        <View style={styles.headerActions}>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Tìm kiếm theo tên ..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery ? (
+              <TouchableOpacity 
+                style={styles.clearButton}
+                onPress={() => setSearchQuery('')}
+              >
+                <Text style={styles.clearButtonText}>×</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          <TouchableOpacity 
+            onPress={showDialog} 
+            style={styles.addButton}
+          >
+            <Text style={styles.addButtonText}>Thêm</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.tableHeader}>
           <Text style={styles.headerCell}>Tên</Text>
@@ -405,11 +437,17 @@ const MenuDetailsScreen = ({ route, navigation }) => {
           <Text style={styles.headerCell}>Chức năng</Text>
         </View>
 
-        <FlatList
-          data={danhSachHienThi}
-          renderItem={renderProductItem}
-          keyExtractor={(item) => item.id}
-        />
+        {danhSachHienThi.length === 0 ? (
+          <Text style={styles.emptyText}>
+            {searchQuery ? 'Không tìm thấy sản phẩm phù hợp' : 'Chưa có sản phẩm nào'}
+          </Text>
+        ) : (
+          <FlatList
+            data={danhSachHienThi}
+            renderItem={renderProductItem}
+            keyExtractor={(item) => item.id}
+          />
+        )}
 
         <View style={styles.phanTrangContainer}>
           {Array.from({ length: Math.ceil(products.length / soHangMoiTrang) }).map((_, index) => (
@@ -743,6 +781,43 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  searchContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  searchInput: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    fontSize: 14,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 8,
+    top: '50%',
+    transform: [{ translateY: -12 }],
+    padding: 4,
+  },
+  clearButtonText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#666',
   },
 });
 

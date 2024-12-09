@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Picker } from 'react-native';
 import { getFirestore, collection, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { Provider, Portal, Dialog, Button, DataTable, TextInput } from 'react-native-paper';
+import { Provider, Portal, Dialog, Button, DataTable, TextInput, Paragraph } from 'react-native-paper';
 import { app } from '../../config';
 
 // Thêm hàm format timestamp
@@ -279,14 +279,14 @@ const UserManager = () => {
         {renderPagination()}
 
         <Portal>
-          <Dialog visible={deleteVisible} onDismiss={() => setDeleteVisible(false)}>
-            <Dialog.Title>Xác nhận xóa</Dialog.Title>
+          <Dialog visible={deleteVisible} onDismiss={() => setDeleteVisible(false)} style={styles.deleteDialog}>
+            <Dialog.Title style={styles.deleteDialogTitle}>Xác nhận xóa</Dialog.Title>
             <Dialog.Content>
-              <Text>Bạn có chắc chắn muốn xóa người dùng này?</Text>
+              <Paragraph style={styles.deleteDialogContent}>Bạn có chắc xóa người dùng này?</Paragraph>
             </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => setDeleteVisible(false)}>Hủy</Button>
-              <Button onPress={handleDelete}>Xóa</Button>
+            <Dialog.Actions style={styles.deleteDialogActions}>
+              <Button onPress={() => setDeleteVisible(false)} textColor="#007BFF">Hủy</Button>
+              <Button onPress={handleDelete} textColor="#007BFF">Xóa</Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>
@@ -580,6 +580,26 @@ const styles = StyleSheet.create({
     height: 40,
     width: '100%',
     backgroundColor: 'transparent',
+  },
+  deleteDialog: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    maxWidth: 300,
+    alignSelf: 'center',
+  },
+  deleteDialogTitle: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#000',
+  },
+  deleteDialogContent: {
+    textAlign: 'center',
+    color: '#000',
+  },
+  deleteDialogActions: {
+    justifyContent: 'flex-end',
+    paddingHorizontal: 15,
+    paddingBottom: 8,
   },
 });
 
